@@ -12,7 +12,7 @@
     <string name="onboarding_perf_desc">Dọn cache, quản lý RAM, tối ưu pin và CPU cho thiết bị của bạn</string>
     <string name="onboarding_key_title">Quản lý key thông minh</string>
     <string name="onboarding_key_desc">Hệ thống key/licensing gắn với thiết bị, bảo mật đa lớp</string>
-    <string name="onboarding_net_title">Tăng ổn định & mạng</string>
+    <string name="onboarding_net_title">Tăng ổn định &amp; mạng</string>
     <string name="onboarding_net_desc">Kiểm tra ping, đo tốc độ, tối ưu kết nối mạng toàn diện</string>
     <string name="onboarding_skip">Bỏ qua</string>
     <string name="onboarding_start">Bắt đầu</string>
