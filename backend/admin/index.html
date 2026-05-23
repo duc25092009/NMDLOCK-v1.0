@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMDLock Admin Panel v1.0</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a28;
+            --text: #e0e0e0;
+            --text2: #888;
+            --accent: #6c5ce7;
+            --accent2: #a29bfe;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --radius: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: 240px;
+            background: var(--bg2);
+            padding: 24px 16px;
+            border-right: 1px solid var(--bg3);
+        }
+        .sidebar h1 {
+            font-size: 18px;
+            color: var(--accent2);
+            margin-bottom: 32px;
+        }
+        .sidebar h1 span { color: var(--text2); font-size: 12px; display: block; }
+        .nav-item {
+            padding: 10px 16px;
+            margin: 4px 0;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text2);
+            font-size: 14px;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: var(--bg3);
+            color: var(--text);
+        }
+        .nav-item.active { border-left: 3px solid var(--accent); }
+        .main {
+            margin-left: 240px;
+            padding: 32px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .header h2 { font-size: 24px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--bg3);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .stat-card .value { font-size: 28px; font-weight: bold; color: var(--accent2); }
+        .stat-card .label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--bg3);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card h3 { margin-bottom: 16px; font-size: 16px; color: var(--accent2); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--bg3);
+        }
+        th { color: var(--text2); font-weight: 500; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-active { background: rgba(46,204,113,0.2); color: var(--success); }
+        .badge-expired { background: rgba(231,76,60,0.2); color: var(--danger); }
+        .badge-revoked { background: rgba(243,156,18,0.2); color: var(--warning); }
+        .badge-trial { background: rgba(108,92,231,0.2); color: var(--accent2); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg3);
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent2); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .hidden { display: none; }
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--bg3);
+            padding-bottom: 8px;
+        }
+        .tab {
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text2);
+        }
+        .tab.active { background: var(--bg3); color: var(--text); }
+        #login-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #login-form .card { width: 400px; }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            background: var(--bg3);
+            border: 1px solid var(--accent);
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="login-form">
+        <div class="card">
+            <h2 style="margin-bottom:24px;">NMDLock Admin</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="admin">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="login()" style="width:100%;">Sign In</button>
+            <div id="login-error" style="color:var(--danger);margin-top:12px;font-size:13px;"></div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+        <div class="sidebar">
+            <h1>NMDLock Admin <span>v1.0.0</span></h1>
+            <div class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</div>
+            <div class="nav-item" onclick="showSection('licenses')">🔑 Licenses</div>
+            <div class="nav-item" onclick="showSection('devices')">📱 Devices</div>
+            <div class="nav-item" onclick="showSection('create-license')">➕ Create License</div>
+            <div class="nav-item" onclick="showSection('audit')">📋 Audit Logs</div>
+            <div class="nav-item" onclick="showSection('settings')">⚙️ Settings</div>
+            <div style="margin-top:32px;">
+                <div class="nav-item" onclick="logout()" style="color:var(--danger);">🚪 Logout</div>
+            </div>
+        </div>
+        <div class="main" id="main-content"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let API_BASE = '/api';
+        let token = localStorage.getItem('admin_token');
+
+        function showToast(msg, color = 'var(--success)') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.borderColor = color;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function api(path, options = {}) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+            if (res.status === 401) {
+                token = null;
+                localStorage.removeItem('admin_token');
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('app').classList.add('hidden');
+                return null;
+            }
+            return res.json();
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.textContent = '';
+            
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, device: { deviceId: 'admin-web', deviceName: 'Admin Web', deviceModel: 'Web', androidVersion: '1.0' } })
+                });
+                const data = await res.json();
+                if (data.success && data.data) {
+                    token = data.data.accessToken;
+                    localStorage.setItem('admin_token', token);
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('app').classList.remove('hidden');
+                    showDashboard();
+                } else {
+                    errorEl.textContent = data.message || 'Login failed';
+                }
+            } catch (e) {
+                errorEl.textContent = 'Connection error';
+            }
+        }
+
+        function logout() {
+            token = null;
+            localStorage.removeItem('admin_token');
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+        }
+
+        function showSection(name) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelector(`.nav-item[onclick="showSection('${name}')"]`)?.classList.add('active');
+            if (name === 'dashboard') showDashboard();
+            else if (name === 'licenses') showLicenses();
+            else if (name === 'devices') showDevices();
+            else if (name === 'create-license') showCreateLicense();
+            else if (name === 'audit') showAudit();
+            else if (name === 'settings') showSettings();
+        }
+
+        async function showDashboard() {
+            const data = await api('/admin/dashboard');
+            const main = document.getElementById('main-content');
+            if (!data?.success) { main.innerHTML = '<p>Failed to load dashboard</p>'; return; }
+            const s = data.data;
+            main.innerHTML = `
+                <div class="header"><h2>Dashboard</h2></div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="value">${s.totalUsers}</div><div class="label">Users</div></div>
+                    <div class="stat-card"><div class="value">${s.totalDevices}</div><div class="label">Devices</div></div>
+                    <div class="stat-card"><div class="value">${s.totalLicenses}</div><div class="label">Total Licenses</div></div>
+                    <div class="stat-card"><div class="value">${s.activeLicenses}</div><div class="label">Active Licenses</div></div>
+                    <div class="stat-card"><div class="value">${s.lockedDevices}</div><div class="label">Locked Devices</div></div>
+                    <div class="stat-card"><div class="value">${s.activeSessions}</div><div class="label">Active Sessions</div></div>
+                    <div class="stat-card"><div class="value" style="color:${s.recentFailures > 0 ? 'var(--danger)' : 'var(--success)'}">${s.recentFailures}</div><div class="label">Recent Failures (1h)</div></div>
+                </div>
+            `;
+        }
+
+        async function showLicenses() {
+            const data = await api('/admin/licenses?limit=50');
+            const main = document.getElementById('main-content');
+            if (!data?.success) { main.innerHTML = '<p>Failed to load licenses</p>'; return; }
+            const items = data.data.items || [];
+            main.innerHTML = `
+                <div class="header"><h2>Licenses</h2></div>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Key</th><th>Type</th><th>Status</th><th>Devices</th><th>Activations</th><th>Created</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${items.map(l => `
+                                <tr>
+                                    <td style="font-family:monospace;font-size:11px;">${l.key_value}</td>
+                                    <td>${l.type}</td>
+                                    <td><span class="badge badge-${l.status}">${l.status}</span></td>
+                                    <td>${l.max_devices}</td>
+                                    <td>${l.activation_count}</td>
+                                    <td>${new Date(l.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="revokeLicense('${l.key_value}')">Revoke</button>
+                                        <button class="btn btn-success btn-sm" onclick="extendLicense('${l.key_value}')">+30d</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function revokeLicense(key) {
+            if (!confirm(`Revoke license ${key}?`)) return;
+            const data = await api('/admin/licenses/revoke', {
+                method: 'POST',
+                body: JSON.stringify({ keyValue: key }),
+            });
+            if (data?.success) { showToast('License revoked'); showLicenses(); }
+            else showToast(data?.message || 'Failed', 'var(--danger)');
+        }
+
+        async function extendLicense(key) {
+            const days = prompt('Days to extend:', '30');
+            if (!days) return;
+            const data = await api('/admin/licenses/extend', {
+                method: 'POST',
+                body: JSON.stringify({ keyValue: key, days: parseInt(days) }),
+            });
+            if (data?.success) { showToast(`Extended ${days} days`); showLicenses(); }
+            else showToast(data?.message || 'Failed', 'var(--danger)');
+        }
+
+        async function showDevices() {
+            const data = await api('/admin/devices?limit=50');
+            const main = document.getElementById('main-content');
+            if (!data?.success) { main.innerHTML = '<p>Failed to load devices</p>'; return; }
+            const items = data.data.items || [];
+            main.innerHTML = `
+                <div class="header"><h2>Devices</h2></div>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Device ID</th><th>Name</th><th>Model</th><th>Last Seen</th><th>Verified</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${items.map(d => `
+                                <tr>
+                                    <td style="font-family:monospace;font-size:11px;">${d.device_id}</td>
+                                    <td>${d.device_name || '-'}</td>
+                                    <td>${d.device_model || '-'}</td>
+                                    <td>${d.last_seen_at ? new Date(d.last_seen_at).toLocaleDateString() : '-'}</td>
+                                    <td>${d.verified_count}</td>
+                                    <td><span class="badge ${d.is_locked ? 'badge-expired' : 'badge-active'}">${d.is_locked ? 'Locked' : 'Active'}</span></td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="toggleDeviceLock('${d.device_id}', ${!d.is_locked})">${d.is_locked ? 'Unlock' : 'Lock'}</button>
+                                        <button class="btn btn-sm" onclick="resetDevice('${d.device_id}')" style="background:var(--warning);color:#000;">Reset</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function toggleDeviceLock(deviceId, lock) {
+            const reason = lock ? prompt('Lock reason:') : '';
+            const data = await api('/admin/devices/lock', {
+                method: 'POST',
+                body: JSON.stringify({ deviceId, locked: lock, reason }),
+            });
+            if (data?.success) { showToast(lock ? 'Device locked' : 'Device unlocked'); showDevices(); }
+            else showToast(data?.message || 'Failed', 'var(--danger)');
+        }
+
+        async function resetDevice(deviceId) {
+            if (!confirm(`Reset device ${deviceId}?`)) return;
+            const data = await api('/admin/devices/reset', {
+                method: 'POST',
+                body: JSON.stringify({ deviceId }),
+            });
+            if (data?.success) { showToast('Device reset'); showDevices(); }
+            else showToast(data?.message || 'Failed', 'var(--danger)');
+        }
+
+        function showCreateLicense() {
+            const main = document.getElementById('main-content');
+            main.innerHTML = `
+                <div class="header"><h2>Create License</h2></div>
+                <div class="card" style="max-width:600px;">
+                    <div class="form-group">
+                        <label>Key (leave empty for auto-generate)</label>
+                        <input type="text" id="new-key" placeholder="NMDLOCK-XXXX-XXXX-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="new-type">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly" selected>Monthly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="permanent">Permanent</option>
+                            <option value="trial">Trial</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (days)</label>
+                        <input type="number" id="new-days" value="30" min="1" max="3650">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Devices</label>
+                        <input type="number" id="new-devices" value="1" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="new-notes" rows="2"></textarea>
+                    </div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                        <label><input type="checkbox" id="new-permanent"> Permanent</label>
+                        <label><input type="checkbox" id="new-trial"> Trial</label>
+                        <label><input type="checkbox" id="new-onetime"> One-time use</label>
+                    </div>
+                    <br>
+                    <button class="btn btn-primary" onclick="createLicense()">Create License</button>
+                    <div id="create-result" style="margin-top:12px;"></div>
+                </div>
+            `;
+        }
+
+        async function createLicense() {
+            const data = await api('/admin/licenses/create', {
+                method: 'POST',
+                body: JSON.stringify({
+                    keyValue: document.getElementById('new-key').value || undefined,
+                    type: document.getElementById('new-type').value,
+                    durationDays: parseInt(document.getElementById('new-days').value),
+                    maxDevices: parseInt(document.getElementById('new-devices').value),
+                    isPermanent: document.getElementById('new-permanent').checked,
+                    isTrial: document.getElementById('new-trial').checked,
+                    isOneTime: document.getElementById('new-onetime').checked,
+                    notes: document.getElementById('new-notes').value,
+                }),
+            });
+            const el = document.getElementById('create-result');
+            if (data?.success) {
+                el.innerHTML = `<span style="color:var(--success);">✅ License created: <strong>${data.data.keyValue}</strong></span>`;
+            } else {
+                el.innerHTML = `<span style="color:var(--danger);">❌ ${data?.message || 'Failed'}</span>`;
+            }
+        }
+
+        async function showAudit() {
+            const data = await api('/admin/audit?limit=50');
+            const main = document.getElementById('main-content');
+            if (!data?.success) { main.innerHTML = '<p>Failed to load audit logs</p>'; return; }
+            const items = data.data.items || [];
+            main.innerHTML = `
+                <div class="header"><h2>Audit Logs</h2></div>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Time</th><th>Action</th><th>Severity</th><th>Device</th><th>Details</th></tr></thead>
+                        <tbody>
+                            ${items.map(log => `
+                                <tr>
+                                    <td style="font-size:11px;">${new Date(log.created_at).toLocaleString()}</td>
+                                    <td>${log.action}</td>
+                                    <td><span class="badge badge-${log.severity === 'info' ? 'active' : log.severity === 'warning' ? 'revoked' : 'expired'}">${log.severity}</span></td>
+                                    <td style="font-family:monospace;font-size:11px;">${(log.device_id || '').substring(0, 16)}...</td>
+                                    <td style="font-size:11px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;">${log.details || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function showSettings() {
+            const data = await api('/admin/settings');
+            const main = document.getElementById('main-content');
+            if (!data?.success) { main.innerHTML = '<p>Failed to load settings</p>'; return; }
+            const items = data.data || [];
+            main.innerHTML = `
+                <div class="header"><h2>Settings</h2></div>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Key</th><th>Value</th><th>Type</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${items.map(s => `
+                                <tr>
+                                    <td style="font-family:monospace;">${s.setting_key}</td>
+                                    <td>${s.setting_value}</td>
+                                    <td>${s.setting_type}</td>
+                                    <td><button class="btn btn-sm" onclick="editSetting('${s.setting_key}')" style="background:var(--accent);color:white;">Edit</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function editSetting(key) {
+            const value = prompt(`New value for ${key}:`);
+            if (value === null) return;
+            api('/admin/settings', {
+                method: 'POST',
+                body: JSON.stringify({ key, value }),
+            }).then(data => {
+                if (data?.success) { showToast('Setting updated'); showSettings(); }
+                else showToast(data?.message || 'Failed', 'var(--danger)');
+            });
+        }
+
+        // Check if token exists on load
+        if (token) {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            showDashboard();
+        }
+    </script>
+</body>
+</html>
