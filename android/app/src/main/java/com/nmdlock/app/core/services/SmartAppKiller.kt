@@ -208,7 +208,7 @@ class SmartAppKiller @Inject constructor(
     private fun getAllThirdPartyApps(): List<String> {
         return try {
             val pm = context.packageManager
-            pm.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(PackageManager.MATCH_UNINSTALLED_PACKAGES.toLong()))
+            pm.getInstalledApplications(PackageManager.MATCH_UNINSTALLED_PACKAGES)
                 .filter { it.flags and ApplicationInfo.FLAG_SYSTEM == 0 }
                 .map { it.packageName }
         } catch (e: Exception) { emptyList() }
