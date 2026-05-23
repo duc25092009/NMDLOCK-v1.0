@@ -40,13 +40,13 @@ class ThermalMonitor @Inject constructor(
      */
     suspend fun getThermalInfo(): ThermalInfo = withContext(Dispatchers.IO) {
         try {
-            // Get list of thermal zone types
+            // Sử dụng dấu nháy đơn '' bọc ngoài lệnh shell để Kotlin không bị lỗi parse dấu $ và \
             val zoneTypesResult = shizukuManager.executeCommand(
-                "for z in /sys/class/thermal/thermal_zone*/type; do echo \"\\$z: \\$(cat \\$z)\"; done"
+                "for z in /sys/class/thermal/thermal_zone*/type; do echo '\$z: \$(cat \$z)'; done"
             ).getOrNull() ?: ""
 
             val zoneTempsResult = shizukuManager.executeCommand(
-                "for z in /sys/class/thermal/thermal_zone*/temp; do echo \"\\$z: \\$(cat \\$z 2>/dev/null || echo 0)\"; done"
+                "for z in /sys/class/thermal/thermal_zone*/temp; do echo '\$z: \$(cat \$z 2>/dev/null || echo 0)'; done"
             ).getOrNull() ?: ""
 
             // Parse types
@@ -74,26 +74,15 @@ class ThermalMonitor @Inject constructor(
 
                     val zoneType = typeMap[path + "/type"] ?: ""
                     when {
-                        zoneType.contains("cpu") || zoneType.contains("cpu-") -> {
+                        zoneType.contains("cpu") -> {
                             if (cpuTemp == null || tempC > cpuTemp) cpuTemp = tempC
                         }
-                        zoneType.contains("gpu") || zoneType.contains("gpu-") -> {
+                        zoneType.contains("gpu") -> {
                             if (gpuTemp == null || tempC > gpuTemp) gpuTemp = tempC
                         }
                     }
                     if (tempC > maxTemp) maxTemp = tempC
                 }
-            }
-
-            // Also try named zones
-            val namedZones = listOf(
-                "cpu0", "cpu1", "cpu2", "cpu3",
-                "gpu", "tsens_tz_sensor",
-            )
-            for (zone in namedZones) {
-                val result = shizukuManager.executeCommand(
-                    "cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -5"
-                ).getOrNull() ?: ""
             }
 
             // Get battery temp from SystemInfoProvider
