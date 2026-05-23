@@ -19,19 +19,27 @@ android {
         vectorDrawables { useSupportLibrary = true }
     }
 
-    buildTypes {
-        debug {
-            isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
-            buildConfigField("boolean", "LOG_ENABLED", "true")
-        }
-        release {
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "API_BASE_URL", "\"https://api.nmdlock.com/api/\"")
-            buildConfigField("boolean", "LOG_ENABLED", "false")
-        }
+buildTypes {
+    debug {
+        isMinifyEnabled = false
+
+        buildConfigField(
+            "String",
+            "API_BASE_URL",
+            "\"https://border-late-dryer-indicate.trycloudflare.com/\""
+        )
     }
+
+    release {
+        isMinifyEnabled = false
+
+        buildConfigField(
+            "String",
+            "API_BASE_URL",
+            "\"https://border-late-dryer-indicate.trycloudflare.com/\""
+        )
+    }
+}
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
