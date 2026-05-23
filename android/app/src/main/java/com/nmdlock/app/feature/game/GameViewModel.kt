@@ -307,7 +307,7 @@ class GameViewModel @Inject constructor(
             pidController.stopAutoTuning()
         } else {
             pidController.startAutoTuning(viewModelScope) {
-                FpsOverlayService.getCurrentFps()
+                FpsOverlayService.getCurrentFps().toFloat()
             }
         }
         _uiState.value = _uiState.value.copy(pidEnabled = !current)
