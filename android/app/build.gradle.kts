@@ -28,6 +28,12 @@ buildTypes {
             "API_BASE_URL",
             "\"https://border-late-dryer-indicate.trycloudflare.com/\""
         )
+
+        buildConfigField(
+            "Boolean",
+            "LOG_ENABLED",
+            "true"
+        )
     }
 
     release {
@@ -37,6 +43,12 @@ buildTypes {
             "String",
             "API_BASE_URL",
             "\"https://border-late-dryer-indicate.trycloudflare.com/\""
+        )
+
+        buildConfigField(
+            "Boolean",
+            "LOG_ENABLED",
+            "false"
         )
     }
 }
