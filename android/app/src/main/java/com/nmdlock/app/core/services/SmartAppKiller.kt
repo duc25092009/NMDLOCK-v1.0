@@ -132,8 +132,8 @@ class SmartAppKiller @Inject constructor(
 
             // 1. Recently used (30 phút gần đây = rất quan trọng)
             val usageStats = getUsageStats(pkg)
-            val hoursSinceLastUse = if (usageStats.lastTimeUsed > 0) {
-                (System.currentTimeMillis() - usageStats.lastTimeUsed) / 3600000f
+            val hoursSinceLastUse = if ((usageStats?.lastTimeUsed ?: 0L) > 0) {
+                (System.currentTimeMillis() - usageStats!!.lastTimeUsed) / 3600000f
             } else 999f
 
             if (hoursSinceLastUse < 0.5f) {
@@ -145,7 +145,7 @@ class SmartAppKiller @Inject constructor(
             }
 
             // 2. Foreground time (càng nhiều càng quan trọng)
-            val hoursForeground = usageStats.totalTimeInForeground / 3600000f
+            val hoursForeground = (usageStats?.totalTimeInForeground ?: 0L) / 3600000f
             score += hoursForeground.coerceAtMost(20f)
             if (hoursForeground > 10f) reasons.add("thường dùng")
 
@@ -190,7 +190,7 @@ class SmartAppKiller @Inject constructor(
         return AppImportance(pkg, score, reasons.joinToString(", "))
     }
 
-    private fun getUsageStats(pkg: String): android.app.usage.UsageStats {
+    private fun getUsageStats(pkg: String): android.app.usage.UsageStats? {
         return try {
             val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
             val now = System.currentTimeMillis()
@@ -199,12 +199,8 @@ class SmartAppKiller @Inject constructor(
                 now - 24 * 60 * 60 * 1000,
                 now
             )?.firstOrNull { it.packageName == pkg }
-                ?: run {
-                    // Return a dummy UsageStats with zero values
-                    android.app.usage.UsageStats(pkg, 0, 0)
-                }
         } catch (e: Exception) {
-            android.app.usage.UsageStats(pkg, 0, 0)
+            null
         }
     }
 
