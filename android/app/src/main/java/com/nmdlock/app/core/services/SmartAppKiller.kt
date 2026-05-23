@@ -199,9 +199,12 @@ class SmartAppKiller @Inject constructor(
                 now - 24 * 60 * 60 * 1000,
                 now
             )?.firstOrNull { it.packageName == pkg }
-                ?: android.app.usage.UsageStats()
+                ?: run {
+                    // Return a dummy UsageStats with zero values
+                    android.app.usage.UsageStats(pkg, 0, 0)
+                }
         } catch (e: Exception) {
-            android.app.usage.UsageStats()
+            android.app.usage.UsageStats(pkg, 0, 0)
         }
     }
 
