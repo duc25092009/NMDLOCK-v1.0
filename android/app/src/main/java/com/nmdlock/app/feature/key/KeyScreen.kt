@@ -1,26 +1,19 @@
 package com.nmdlock.app.feature.key
 
-import androidx.compose.runtime.*
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.nmdlock.app.data.repository.LicenseRepository
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
 @Composable
-fun KeyScreen(
-    repository: LicenseRepository = hiltViewModel()
-) {
+fun KeyScreen() {
 
-    var key by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
 
-    fun activate(deviceId: String) {
-
-        scope.launch {
-
-            repository.activateLicense(
-                key = key,
-                deviceId = deviceId
-            )
-        }
+        Text("Key Screen")
     }
 }
