@@ -947,6 +947,7 @@ private fun CqStat(label: String, value: String, color: Color) {
 // EXISTING COMPOSABLES (giữ nguyên)
 // ══════════════════════════════════════════════════════════════
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfileCards(
     profileNames: List<String>,
