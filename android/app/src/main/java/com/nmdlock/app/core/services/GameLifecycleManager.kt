@@ -96,7 +96,7 @@ class GameLifecycleManager @Inject constructor(
                 applyProGamingProfile(pkg)
 
                 // Bật thermal monitoring + HUD
-                thermalEngine.startMonitoring(lifecycleScope ?: return@launch)
+                thermalEngine.startMonitoring(lifecycleScope ?: return)
                 startHudOverlays(pkg)
             }
 

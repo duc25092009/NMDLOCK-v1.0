@@ -16,6 +16,23 @@ class GameProfileEngine @Inject constructor(
     private val optimizationEngine: OptimizationEngine,
 ) {
 
+    /**
+     * Game profile settings for automatic game detection.
+     */
+    data class GameProfile(
+        val name: String,
+        val animationScale: Float = 0f,
+        val forceGpu: Boolean = true,
+        val killApps: Boolean = true,
+        val resolution: String = "reset",
+        val refreshRate: Int = 90,
+        val brightness: Int = 180,
+        val msaa: Boolean = false,
+        val dns: String = "cloudflare",
+        val wifiLock: Boolean = true,
+        val dnd: Boolean = true
+    )
+
     data class ProfileResult(
         val profileName: String,
         val actionsApplied: List<String> = emptyList(),
@@ -33,6 +50,61 @@ class GameProfileEngine @Inject constructor(
             "Hiệu năng" -> applyPerformanceProfile(isMaxVersion)
             "Tiết kiệm pin" -> applyBatterySaverProfile(isMaxVersion)
             else -> applyBalancedProfile(isMaxVersion)
+        }
+    }
+
+    /**
+     * Apply a game profile object (used by GameLifecycleManager auto-detection).
+     */
+    suspend fun applyProfile(profile: GameProfile): ProfileResult {
+        val actions = mutableListOf<String>()
+        try {
+            if (profile.killApps) {
+                shizukuManager.executeCommand(
+                    "for pkg in \$(pm list packages -3 | sed 's/package://'); do " +
+                    "  [ \"\$pkg\" != \"${getOurPackageName()}\" ] && am force-stop \$pkg 2>/dev/null; " +
+                    "done"
+                )
+                actions.add("Đã dừng ứng dụng nền")
+            }
+            if (profile.msaa) {
+                if (applyForceMsaa()) actions.add("Đã bật 4x MSAA")
+            }
+            if (profile.resolution != "reset" && profile.resolution.isNotEmpty()) {
+                val parts = profile.resolution.split("x")
+                if (parts.size == 2) {
+                    val w = parts[0].toIntOrNull() ?: 1280
+                    val h = parts[1].toIntOrNull() ?: 720
+                    if (setResolution(w, h)) actions.add("Đã đổi sang ${profile.resolution}")
+                }
+            }
+            if (profile.refreshRate > 60) {
+                if (boostRefreshRate()) actions.add("Đã ép tần số quét ${profile.refreshRate}Hz")
+            }
+            if (profile.wifiLock) {
+                if (lockWifiAwake()) actions.add("Đã khóa WiFi khỏi ngủ")
+            }
+            shizukuManager.executeCommand("settings put global window_animation_scale ${profile.animationScale}")
+            shizukuManager.executeCommand("settings put global transition_animation_scale ${profile.animationScale}")
+            shizukuManager.executeCommand("settings put global animator_duration_scale ${profile.animationScale}")
+            actions.add("Đã set animation scale")
+            if (profile.forceGpu) {
+                shizukuManager.executeCommand("settings put global force_gpu_rendering 1")
+                actions.add("Đã bật tăng tốc GPU")
+            }
+            shizukuManager.executeCommand("settings put system screen_brightness ${profile.brightness}")
+            actions.add("Đã chỉnh độ sáng")
+            return ProfileResult(
+                profileName = profile.name,
+                actionsApplied = actions,
+                isSuccess = true
+            )
+        } catch (e: Exception) {
+            return ProfileResult(
+                profileName = profile.name,
+                actionsApplied = listOf("Lỗi: ${e.message}"),
+                isSuccess = false
+            )
         }
     }
 

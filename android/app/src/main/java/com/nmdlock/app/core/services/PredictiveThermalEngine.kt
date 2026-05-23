@@ -116,7 +116,7 @@ class PredictiveThermalEngine @Inject constructor(
     /**
      * Xử lý sample với toàn bộ thuật toán
      */
-    private fun processSample(sample: ThermalSample) {
+    private suspend fun processSample(sample: ThermalSample) {
         // 1. Kalman Filter — Smooth noise
         val kalmanCpu = cpuKalman.filterFloat(sample.cpuTemp)
         val kalmanGpu = gpuKalman.filterFloat(sample.gpuTemp)
@@ -316,7 +316,11 @@ class PredictiveThermalEngine @Inject constructor(
         return try {
             val manager = context.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
             val temp = manager?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_TEMPERATURE)
-            if (temp != null && temp > 0) temp / 10f else 0f
+            if (temp != null && temp > 0) temp / 10f else {
+                // Fallback: use intent-based approach (works on all API levels)
+                val intent = context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+                intent?.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, 0)?.let { it / 10f } ?: 0f
+            }
         } catch (e: Exception) { 0f }
     }
 

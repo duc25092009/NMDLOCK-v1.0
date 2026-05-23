@@ -249,8 +249,8 @@ class InputLatencyReducer @Inject constructor(
 
             // Predict 16ms ahead (1 frame @ 60fps)
             val predictAheadMs = 16L
-            val predictedX = kalmanX.state + velocityX * predictAheadMs / 1000f
-            val predictedY = kalmanY.state + velocityY * predictAheadMs / 1000f
+            val predictedX = kalmanX.state.toFloat() + velocityX * predictAheadMs / 1000f
+            val predictedY = kalmanY.state.toFloat() + velocityY * predictAheadMs / 1000f
 
             // Confidence dựa trên velocity stability
             val speed = sqrt(velocityX * velocityX + velocityY * velocityY)

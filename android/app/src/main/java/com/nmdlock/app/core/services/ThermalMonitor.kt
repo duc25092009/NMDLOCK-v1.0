@@ -42,11 +42,11 @@ class ThermalMonitor @Inject constructor(
         try {
             // Get list of thermal zone types
             val zoneTypesResult = shizukuManager.executeCommand(
-                "for z in /sys/class/thermal/thermal_zone*/type; do echo \"\\$z: \\$(cat \\$z)\"; done"
+                "for zone in /sys/class/thermal/thermal_zone*/type; do echo \"${'$'}zone: \$(${'$'}zone)\"; done"
             ).getOrNull() ?: ""
 
             val zoneTempsResult = shizukuManager.executeCommand(
-                "for z in /sys/class/thermal/thermal_zone*/temp; do echo \"\\$z: \\$(cat \\$z 2>/dev/null || echo 0)\"; done"
+                "for zone in /sys/class/thermal/thermal_zone*/temp; do echo \"${'$'}zone: \$(${'$'}zone 2>/dev/null || echo 0)\"; done"
             ).getOrNull() ?: ""
 
             // Parse types

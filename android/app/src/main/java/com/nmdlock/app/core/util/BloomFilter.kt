@@ -35,7 +35,7 @@ class BloomFilter(
      */
     private fun hash(element: String): IntArray {
         val hash1 = simpleHash(element, 0x45D9F3B)
-        val hash2 = simpleHash(element, 0x9E3779B9)
+        val hash2 = simpleHash(element, -0x61C88647)
 
         return IntArray(numHashFunctions) { i ->
             ((hash1 + i.toLong() * hash2) % bitSetSize).toInt().let {
