@@ -4,33 +4,23 @@ import com.nmdlock.app.data.remote.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
-/**
- * License management API endpoints.
- */
 interface LicenseApi {
 
-    @POST("license/activate")
+    @POST("/api/activate")
     suspend fun activate(
         @Body request: ActivateLicenseRequest
     ): Response<ApiResponse<ActivateLicenseResponse>>
 
-    @POST("license/validate")
+    @POST("/api/check")
     suspend fun validate(
         @Body request: ValidateLicenseRequest
     ): Response<ApiResponse<ValidateLicenseResponse>>
 
-    @POST("license/redeem")
+    @POST("/api/activate")
     suspend fun redeem(
         @Body request: ActivateLicenseRequest
     ): Response<ApiResponse<ActivateLicenseResponse>>
 
-    @GET("license/me")
-    suspend fun getMyLicense(
-        @Query("deviceId") deviceId: String
-    ): Response<ApiResponse<LicenseInfoResponse>>
-
-    @GET("license/history")
-    suspend fun getHistory(
-        @Query("deviceId") deviceId: String
-    ): Response<ApiResponse<LicenseHistoryResponse>>
+    @GET("/api/health")
+    suspend fun health(): Response<Map<String, Any>>
 }
