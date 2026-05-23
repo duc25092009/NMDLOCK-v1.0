@@ -4,15 +4,17 @@ package com.nmdlock.app.data.remote.dto
  * Activate license request.
  */
 data class ActivateLicenseRequest(
-    val keyValue: String,
-    val device: DeviceInfoRequest,
+    val key: String,
+    val hwid: String,
+    val device_model: String,
 )
 
 /**
  * Validate license request.
  */
 data class ValidateLicenseRequest(
-    val deviceId: String,
+    val key: String,
+    val hwid: String,
 )
 
 /**
