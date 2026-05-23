@@ -1,158 +1,72 @@
 package com.nmdlock.app.data.repository
 
-import com.nmdlock.app.core.security.DeviceIdManager
-import com.nmdlock.app.data.local.DataStoreManager
+import android.os.Build
 import com.nmdlock.app.data.remote.api.LicenseApi
-import com.nmdlock.app.data.remote.dto.*
-import kotlinx.coroutines.flow.first
+import com.nmdlock.app.data.remote.dto.ActivateLicenseRequest
+import com.nmdlock.app.data.remote.dto.ValidateLicenseRequest
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Repository handling license/key operations.
- * Coordinates between API, local cache, and device binding.
- */
 @Singleton
 class LicenseRepository @Inject constructor(
-    private val licenseApi: LicenseApi,
-    private val deviceIdManager: DeviceIdManager,
-    private val dataStoreManager: DataStoreManager,
+    private val licenseApi: LicenseApi
 ) {
-    /**
-     * Activate a license key for this device.
-     */
-    suspend fun activateLicense(keyValue: String): Result<ActivateLicenseResponse> {
+
+    suspend fun activateLicense(
+        key: String,
+        deviceId: String
+    ): Result<Boolean> {
         return try {
-            val deviceInfo = deviceIdManager.getDeviceInfo()
-            val response = licenseApi.activate(
-                ActivateLicenseRequest(
-                    keyValue = keyValue,
-                    device = DeviceInfoRequest(
-                        deviceId = deviceInfo.deviceId,
-                        deviceName = deviceInfo.deviceName,
-                        deviceModel = deviceInfo.deviceModel,
-                        androidVersion = deviceInfo.androidVersion,
-                    ),
-                )
+
+            val request = ActivateLicenseRequest(
+                key = key,
+                hwid = deviceId,
+                device_model = "${Build.MANUFACTURER} ${Build.MODEL}"
             )
 
+            val response = licenseApi.activate(request)
+
             if (response.isSuccessful && response.body()?.success == true) {
-                val data = response.body()!!.data!!
-                val licenseData = data.license
-                dataStoreManager.setFullLicenseCache(
-                    status = "active",
-                    keyValue = keyValue,
-                    type = licenseData?.type ?: "device_locked",
-                    expiresAt = licenseData?.expiresAt,
-                    maxDevices = licenseData?.maxDevices ?: 1,
-                )
-                Result.success(data)
+                Result.success(true)
             } else {
-                val msg = response.body()?.message ?: "Activation failed"
-                dataStoreManager.clearLicenseCache()
-                Result.failure(Exception(msg))
+                Result.failure(
+                    Exception(
+                        response.body()?.message ?: "Activation failed"
+                    )
+                )
             }
+
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    /**
-     * Validate current license for this device.
-     */
-    suspend fun validateLicense(): Result<ValidateLicenseResponse> {
+    suspend fun validateLicense(
+        key: String,
+        deviceId: String
+    ): Result<Boolean> {
+
         return try {
-            val deviceId = deviceIdManager.getDeviceId()
-            val response = licenseApi.validate(
-                ValidateLicenseRequest(deviceId = deviceId)
+
+            val request = ValidateLicenseRequest(
+                key = key,
+                hwid = deviceId
             )
 
+            val response = licenseApi.validate(request)
+
             if (response.isSuccessful && response.body()?.success == true) {
-                val data = response.body()!!.data!!
-                val lic = data.license
-                if (data.valid) {
-                    dataStoreManager.setFullLicenseCache(
-                        status = "active",
-                        keyValue = lic?.keyValue,
-                        type = lic?.type ?: "device_locked",
-                        expiresAt = lic?.expiresAt,
-                        maxDevices = lic?.maxDevices ?: 1,
-                    )
-                } else {
-                    dataStoreManager.clearLicenseCache()
-                }
-                Result.success(data)
+                Result.success(true)
             } else {
-                // Try cached status
-                val cached = dataStoreManager.cachedLicenseStatus.first()
-                Result.success(
-                    ValidateLicenseResponse(
-                        valid = cached == "active",
-                        reason = if (cached != "active") "Cached: $cached" else null,
+                Result.failure(
+                    Exception(
+                        response.body()?.message ?: "Validation failed"
                     )
                 )
             }
-        } catch (e: Exception) {
-            // Offline - use cached status
-            val cached = dataStoreManager.cachedLicenseStatus.first()
-            Result.success(
-                ValidateLicenseResponse(
-                    valid = cached == "active",
-                    reason = "Offline mode",
-                )
-            )
-        }
-    }
 
-    /**
-     * Get current license info for display.
-     */
-    suspend fun getMyLicense(): Result<LicenseInfoResponse> {
-        return try {
-            val deviceId = deviceIdManager.getDeviceId()
-            val response = licenseApi.getMyLicense(deviceId)
-
-            if (response.isSuccessful && response.body()?.success == true) {
-                val data = response.body()!!.data!!
-                dataStoreManager.setFullLicenseCache(
-                    status = if (data.active) "active" else "inactive",
-                    keyValue = data.keyValue,
-                    type = data.type,
-                    expiresAt = data.expiresAt,
-                    maxDevices = data.maxDevices,
-                )
-                Result.success(data)
-            } else {
-                Result.failure(Exception("Failed to get license info"))
-            }
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    /**
-     * Get license activation history.
-     */
-    suspend fun getHistory(): Result<List<LicenseHistoryEntry>> {
-        return try {
-            val deviceId = deviceIdManager.getDeviceId()
-            val response = licenseApi.getHistory(deviceId)
-
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data?.items ?: emptyList())
-            } else {
-                Result.success(emptyList())
-            }
-        } catch (e: Exception) {
-            Result.success(emptyList())
-        }
-    }
-
-    /**
-     * Check if the current license is valid (uses cache if offline).
-     */
-    suspend fun isLicenseValid(): Boolean {
-        val result = validateLicense()
-        return result.getOrNull()?.valid == true
     }
 }
