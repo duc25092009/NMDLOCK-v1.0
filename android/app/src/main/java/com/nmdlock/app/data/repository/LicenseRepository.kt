@@ -1,16 +1,19 @@
 package com.nmdlock.app.data.repository
 
+import android.util.Log
 import com.nmdlock.app.core.security.DeviceIdManager
 import com.nmdlock.app.data.local.DataStoreManager
 import com.nmdlock.app.data.remote.api.LicenseApi
-import com.nmdlock.app.data.remote.dto.*
+import com.nmdlock.app.data.remote.api.ActivateLicenseRequest
+import com.nmdlock.app.data.remote.api.ActivateLicenseResponse
+import com.nmdlock.app.data.remote.api.CheckLicenseResponse
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Repository handling license/key operations.
- * Coordinates between API, local cache, and device binding.
+ * Tích hợp với backend CloudFlare: https://border-late-dryer-indicate.trycloudflare.com/api/
  */
 @Singleton
 class LicenseRepository @Inject constructor(
@@ -18,112 +21,112 @@ class LicenseRepository @Inject constructor(
     private val deviceIdManager: DeviceIdManager,
     private val dataStoreManager: DataStoreManager,
 ) {
+    private val TAG = "LicenseRepository"
+
     /**
-     * Activate a license key for this device.
+     * Kích hoạt license key
+     * Backend endpoint: POST /api/activate
+     * Request body: { key, hwid, device_model }
      */
     suspend fun activateLicense(keyValue: String): Result<ActivateLicenseResponse> {
         return try {
             val deviceInfo = deviceIdManager.getDeviceInfo()
-            val response = licenseApi.activate(
-                ActivateLicenseRequest(
-                    keyValue = keyValue,
-                    device = DeviceInfoRequest(
-                        deviceId = deviceInfo.deviceId,
-                        deviceName = deviceInfo.deviceName,
-                        deviceModel = deviceInfo.deviceModel,
-                        androidVersion = deviceInfo.androidVersion,
-                    ),
-                )
+            
+            Log.d(TAG, "Activating license key: $keyValue")
+            Log.d(TAG, "Device ID: ${deviceInfo.deviceId}")
+            Log.d(TAG, "Device Model: ${deviceInfo.deviceModel}")
+
+            // Tạo request theo format backend
+            val request = ActivateLicenseRequest(
+                key = keyValue.trim().uppercase(),
+                hwid = deviceInfo.deviceId,
+                device_model = deviceInfo.deviceModel
             )
 
-            if (response.isSuccessful && response.body()?.success == true) {
-                val data = response.body()!!.data!!
-                val licenseData = data.license
-                dataStoreManager.setFullLicenseCache(
-                    status = "active",
-                    keyValue = keyValue,
-                    type = licenseData?.type ?: "device_locked",
-                    expiresAt = licenseData?.expiresAt,
-                    maxDevices = licenseData?.maxDevices ?: 1,
-                )
-                Result.success(data)
-            } else {
-                val msg = response.body()?.message ?: "Activation failed"
-                dataStoreManager.clearLicenseCache()
-                Result.failure(Exception(msg))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+            val response = licenseApi.activateLicense(request)
 
-    /**
-     * Validate current license for this device.
-     */
-    suspend fun validateLicense(): Result<ValidateLicenseResponse> {
-        return try {
-            val deviceId = deviceIdManager.getDeviceId()
-            val response = licenseApi.validate(
-                ValidateLicenseRequest(deviceId = deviceId)
-            )
-
-            if (response.isSuccessful && response.body()?.success == true) {
-                val data = response.body()!!.data!!
-                val lic = data.license
-                if (data.valid) {
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val data = apiResponse.data
+                    Log.d(TAG, "License activated successfully: ${data.status}")
+                    
+                    // Lưu vào local cache
                     dataStoreManager.setFullLicenseCache(
-                        status = "active",
-                        keyValue = lic?.keyValue,
-                        type = lic?.type ?: "device_locked",
-                        expiresAt = lic?.expiresAt,
-                        maxDevices = lic?.maxDevices ?: 1,
+                        status = data.status,
+                        keyValue = keyValue,
+                        type = "device_locked", // default type
+                        expiresAt = data.expires_at,
+                        maxDevices = 1,
                     )
+                    
+                    Result.success(data)
                 } else {
+                    val errorMsg = apiResponse.error ?: apiResponse.message ?: "Activation failed"
+                    Log.e(TAG, "Activation failed: $errorMsg")
                     dataStoreManager.clearLicenseCache()
+                    Result.failure(Exception(errorMsg))
                 }
-                Result.success(data)
             } else {
-                // Try cached status
-                val cached = dataStoreManager.cachedLicenseStatus.first()
-                Result.success(
-                    ValidateLicenseResponse(
-                        valid = cached == "active",
-                        reason = if (cached != "active") "Cached: $cached" else null,
-                    )
-                )
+                val httpMsg = "HTTP ${response.code()}: ${response.message()}"
+                Log.e(TAG, "HTTP error: $httpMsg")
+                dataStoreManager.clearLicenseCache()
+                Result.failure(Exception(httpMsg))
             }
         } catch (e: Exception) {
-            // Offline - use cached status
-            val cached = dataStoreManager.cachedLicenseStatus.first()
-            Result.success(
-                ValidateLicenseResponse(
-                    valid = cached == "active",
-                    reason = "Offline mode",
-                )
-            )
+            Log.e(TAG, "Exception during activation", e)
+            try {
+                dataStoreManager.clearLicenseCache()
+            } catch (clearEx: Exception) {
+                Log.e(TAG, "Failed to clear cache", clearEx)
+            }
+            Result.failure(e)
         }
     }
 
     /**
-     * Get current license info for display.
+     * Kiểm tra license key có hợp lệ không
+     * Backend endpoint: GET /api/check?key=<key>
      */
-    suspend fun getMyLicense(): Result<LicenseInfoResponse> {
+    suspend fun checkLicense(keyValue: String): Result<CheckLicenseResponse> {
         return try {
-            val deviceId = deviceIdManager.getDeviceId()
-            val response = licenseApi.getMyLicense(deviceId)
+            Log.d(TAG, "Checking license key: $keyValue")
+            
+            val response = licenseApi.checkLicense(keyValue.trim().uppercase())
 
-            if (response.isSuccessful && response.body()?.success == true) {
-                val data = response.body()!!.data!!
-                dataStoreManager.setFullLicenseCache(
-                    status = if (data.active) "active" else "inactive",
-                    keyValue = data.keyValue,
-                    type = data.type,
-                    expiresAt = data.expiresAt,
-                    maxDevices = data.maxDevices,
-                )
-                Result.success(data)
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    Log.d(TAG, "License check result: ${apiResponse.data.valid}")
+                    Result.success(apiResponse.data)
+                } else {
+                    val errorMsg = apiResponse.error ?: "Check failed"
+                    Log.e(TAG, "Check failed: $errorMsg")
+                    Result.failure(Exception(errorMsg))
+                }
             } else {
-                Result.failure(Exception("Failed to get license info"))
+                val httpMsg = "HTTP ${response.code()}: ${response.message()}"
+                Log.e(TAG, "HTTP error: $httpMsg")
+                Result.failure(Exception(httpMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during check", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Lấy license info từ local cache
+     */
+    suspend fun getCachedLicense(): Result<LicenseCacheData> {
+        return try {
+            val cached = dataStoreManager.getLicenseCache()
+            if (cached != null && cached.status == "active") {
+                Result.success(cached)
+            } else {
+                Result.failure(Exception("No active license cached"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -131,28 +134,25 @@ class LicenseRepository @Inject constructor(
     }
 
     /**
-     * Get license activation history.
+     * Clear local license cache
      */
-    suspend fun getHistory(): Result<List<LicenseHistoryEntry>> {
+    suspend fun clearLicense(): Result<Unit> {
         return try {
-            val deviceId = deviceIdManager.getDeviceId()
-            val response = licenseApi.getHistory(deviceId)
-
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data?.items ?: emptyList())
-            } else {
-                Result.success(emptyList())
-            }
+            dataStoreManager.clearLicenseCache()
+            Result.success(Unit)
         } catch (e: Exception) {
-            Result.success(emptyList())
+            Result.failure(e)
         }
-    }
-
-    /**
-     * Check if the current license is valid (uses cache if offline).
-     */
-    suspend fun isLicenseValid(): Boolean {
-        val result = validateLicense()
-        return result.getOrNull()?.valid == true
     }
 }
+
+/**
+ * Local cached license data
+ */
+data class LicenseCacheData(
+    val status: String,
+    val keyValue: String,
+    val type: String,
+    val expiresAt: String?,
+    val maxDevices: Int,
+)
