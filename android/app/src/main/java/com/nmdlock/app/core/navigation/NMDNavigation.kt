@@ -56,7 +56,12 @@ fun NMDNavigation(
     ) { innerPadding ->
         Log.d("NMD_NAV", "NMDNavigation: Rendering NavHost with padding=$innerPadding")
         
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding).background(MaterialTheme.colorScheme.background)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
             NavHost(
                 navController = navController,
                 startDestination = NavRoutes.Dashboard.route,
@@ -68,90 +73,49 @@ fun NMDNavigation(
             ) {
                 Log.d("NMD_NAV", "NMDNavigation: Registering routes")
                 
+                // ✅ TẤT CẢ composable() KHÔNG CÓ try-catch
                 composable(NavRoutes.Dashboard.route) {
                     Log.d("NMD_NAV", "NMDNavigation: Rendering DashboardScreen")
-                    try {
-                        DashboardScreen(
-                            onNavigateToGame = { navController.navigate(NavRoutes.GameProfile.route) },
-                            onNavigateToSettings = { navController.navigate(NavRoutes.Settings.route) },
-                            onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
-                        )
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "DashboardScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Dashboard: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    DashboardScreen(
+                        onNavigateToGame = { navController.navigate(NavRoutes.GameProfile.route) },
+                        onNavigateToSettings = { navController.navigate(NavRoutes.Settings.route) },
+                        onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
+                    )
                 }
+                
                 composable(NavRoutes.Device.route) {
-                    try {
-                        DeviceScreen()
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "DeviceScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Device: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering DeviceScreen")
+                    DeviceScreen()
                 }
+                
                 composable(NavRoutes.Key.route) {
-                    try {
-                        KeyScreen()
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "KeyScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Key: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering KeyScreen")
+                    KeyScreen()
                 }
+                
                 composable(NavRoutes.Optimization.route) {
-                    try {
-                        OptimizationScreen()
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "OptimizationScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Optimization: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering OptimizationScreen")
+                    OptimizationScreen()
                 }
+                
                 composable(NavRoutes.Network.route) {
-                    try {
-                        NetworkScreen()
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "NetworkScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Network: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering NetworkScreen")
+                    NetworkScreen()
                 }
+                
                 composable(NavRoutes.GameProfile.route) {
-                    try {
-                        GameProfileScreen(onBack = { navController.popBackStack() })
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "GameProfileScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải GameProfile: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering GameProfileScreen")
+                    GameProfileScreen(onBack = { navController.popBackStack() })
                 }
+                
                 composable(NavRoutes.Settings.route) {
-                    try {
-                        SettingsScreen(onBack = { navController.popBackStack() })
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "SettingsScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Settings: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering SettingsScreen")
+                    SettingsScreen(onBack = { navController.popBackStack() })
                 }
+                
                 composable(NavRoutes.Support.route) {
-                    try {
-                        SupportScreen(onBack = { navController.popBackStack() })
-                    } catch (e: Exception) {
-                        Log.e("NMD_NAV", "SupportScreen crashed", e)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Lỗi tải Support: ${e.message}", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering SupportScreen")
+                    SupportScreen(onBack = { navController.popBackStack() })
                 }
             }
         }
@@ -167,10 +131,22 @@ fun NMDBottomBar(navController: NavHostController) {
     Log.d("NMD_NAV", "NMDBottomBar: currentRoute=${currentDestination?.route}, showBottomBar=$showBottomBar")
     
     if (showBottomBar) {
-        Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f), tonalElevation = 0.dp, shadowElevation = 8.dp) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+            tonalElevation = 0.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 bottomNavItems.forEach { item ->
                     val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                    
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -181,9 +157,25 @@ fun NMDBottomBar(navController: NavHostController) {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(imageVector = item.icon, contentDescription = item.label, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)) },
-                        label = { Text(text = item.label, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                        icon = {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.label,
+                                tint = if (selected) MaterialTheme.colorScheme.primary 
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = item.label,
+                                color = if (selected) MaterialTheme.colorScheme.primary 
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontSize = 10.sp,
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        ),
                     )
                 }
             }
