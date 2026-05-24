@@ -6,15 +6,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import com.nmdlock.app.core.navigation.NMDNavigation
 import com.nmdlock.app.core.ui.theme.NMDLockTheme
 import com.nmdlock.app.data.local.DataStoreManager
@@ -28,7 +32,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var dataStoreManager: DataStoreManager
+    @Inject
+    lateinit var dataStoreManager: DataStoreManager
 
     private sealed class AppState {
         object Loading : AppState()
@@ -61,7 +66,10 @@ class MainActivity : ComponentActivity() {
             }
 
             NMDLockTheme(darkTheme = isDarkTheme) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
                     Log.d("NMD_MAIN", "Rendering AppState: $appState")
                     
                     when (val state = appState) {
@@ -81,20 +89,59 @@ class MainActivity : ComponentActivity() {
                         is AppState.LicenseCheck -> {
                             LicenseGateScreen(onLicenseValid = {
                                 Log.d("NMD_MAIN", "License validated! Entering app")
-                                appState = AppState.Ready
+                                try {
+                                    appState = AppState.Ready
+                                } catch (e: Exception) {
+                                    Log.e("NMD_MAIN", "Error transitioning to Ready state", e)
+                                    appState = AppState.Error("Lỗi khi vào app: ${e.message}")
+                                }
                             })
                         }
                         is AppState.Ready -> {
-                            Log.d("NMD_MAIN", "Showing NMDNavigation (MAIN APP) ✓✓✓")
-                            NMDNavigation()
+                            Log.d("NMD_MAIN", "Showing NMDNavigation (MAIN APP)")
+                            try {
+                                NMDNavigation(
+                                    onLicenseExpired = {
+                                        Log.w("NMD_MAIN", "License expired during usage")
+                                        appState = AppState.LicenseCheck
+                                    }
+                                )
+                            } catch (e: Exception) {
+                                Log.e("NMD_MAIN", "NMDNavigation crashed!", e)
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            "Lỗi khi tải giao diện chính",
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.headlineSmall
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            e.message ?: "Unknown error",
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Button(onClick = { appState = AppState.LicenseCheck }) {
+                                            Text("Thử lại")
+                                        }
+                                    }
+                                }
+                            }
                         }
                         is AppState.Error -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                androidx.compose.material3.Text(
-                                    text = "⚠️ Lỗi: ${state.message}",
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        "Lỗi: ${state.message}",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(onClick = { appState = AppState.Loading }) {
+                                        Text("Thử lại")
+                                    }
+                                }
                             }
                         }
                     }
