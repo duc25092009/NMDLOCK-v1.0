@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.NMDLock" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/surface_dark</item>
+    </style>
+
+    <!-- Splash screen theme -->
+    <style name="Theme.NMDLock.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/surface_dark</item>
+        <item name="postSplashScreenTheme">@style/Theme.NMDLock</item>
+    </style>
+</resources>
