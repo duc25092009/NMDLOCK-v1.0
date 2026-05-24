@@ -289,7 +289,7 @@ private fun LoadingDots() {
 }
 
 // ============================================================================
-// SUB-COMPOSABLE: LicenseGateForm (FULLY FORMATTED)
+// SUB-COMPOSABLE: LicenseGateForm (FIXED animateEnterExit ERRORS)
 // ============================================================================
 @Composable
 private fun LicenseGateForm(
@@ -407,7 +407,7 @@ private fun LicenseGateForm(
         
         Spacer(modifier = Modifier.height(20.dp))
         
-        // Key Input Field
+        // Key Input Field (FIXED: Removed animateEnterExit)
         OutlinedTextField(
             value = uiState.keyInput,
             onValueChange = onKeyInputChanged,
@@ -418,9 +418,7 @@ private fun LicenseGateForm(
                     fontSize = 14.sp
                 )
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .animateEnterExit(enter = slideInHorizontally() + fadeIn()),
+            modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             textStyle = MaterialTheme.typography.bodyMedium.copy(
                 color = DarkText,
@@ -453,13 +451,12 @@ private fun LicenseGateForm(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Activate Button
+        // Activate Button (FIXED: Removed animateEnterExit)
         Button(
             onClick = onActivateKey,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
-                .animateEnterExit(enter = scaleIn() + fadeIn()),
+                .height(52.dp),
             enabled = !uiState.isLoading && uiState.keyInput.isNotBlank(),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             shape = RoundedCornerShape(14.dp),
@@ -510,14 +507,16 @@ private fun LicenseGateForm(
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically()
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                uiState.message!!,
-                color = Success,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    uiState.message!!,
+                    color = Success,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
         
         // Error Message
@@ -526,13 +525,15 @@ private fun LicenseGateForm(
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically()
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                uiState.message!!,
-                color = Error,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    uiState.message!!,
+                    color = Error,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -548,10 +549,9 @@ private fun LicenseGateForm(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // Retry Button
+        // Retry Button (FIXED: Removed animateEnterExit)
         TextButton(
-            onClick = onRetryCheck,
-            modifier = Modifier.animateEnterExit(enter = fadeIn())
+            onClick = onRetryCheck
         ) {
             Icon(
                 Icons.Default.Refresh,
