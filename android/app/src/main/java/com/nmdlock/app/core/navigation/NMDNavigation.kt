@@ -19,16 +19,13 @@ import androidx.navigation.compose.rememberNavController
 import com.nmdlock.app.core.ui.theme.*
 import com.nmdlock.app.feature.dashboard.DashboardScreen
 import com.nmdlock.app.feature.device.DeviceScreen
-import com.nmdlock.app.feature.key.KeyScreen
-import com.nmdlock.app.feature.optimization.OptimizationScreen
-import com.nmdlock.app.feature.network.NetworkScreen
 import com.nmdlock.app.feature.game.GameProfileScreen
+import com.nmdlock.app.feature.key.KeyScreen
+import com.nmdlock.app.feature.network.NetworkScreen
+import com.nmdlock.app.feature.optimization.OptimizationScreen
 import com.nmdlock.app.feature.settings.SettingsScreen
 import com.nmdlock.app.feature.support.SupportScreen
 
-/**
- * Bottom navigation items.
- */
 data class BottomNavItem(
     val route: String,
     val label: String,
@@ -43,21 +40,18 @@ val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.Network.route, "Mạng", Icons.Default.Wifi),
 )
 
-/**
- * Main navigation host with bottom navigation bar.
- */
 @Composable
 fun NMDNavigation() {
     val navController = rememberNavController()
 
     Scaffold(
         containerColor = DarkBg,
-        bottomBar = { NMDBottomBar(navController) }
+        bottomBar = { NMDBottomBar(navController) },
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
         ) {
             NavHost(
                 navController = navController,
@@ -97,4 +91,56 @@ fun NMDNavigation() {
     }
 }
 
-/**
+@Composable
+fun NMDBottomBar(navController: NavHostController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    val showBottomBar = bottomNavItems.any { item ->
+        currentDestination?.hierarchy?.any { it.route == item.route } == true
+    }
+
+    if (showBottomBar) {
+        NavigationBar(
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = DarkSurface,
+            tonalElevation = 0.dp,
+        ) {
+            bottomNavItems.forEach { item ->
+                val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = item.label,
+                            fontSize = 10.sp,
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Purple600.copy(alpha = 0.15f),
+                        selectedIconColor = Purple400,
+                        selectedTextColor = Purple400,
+                        unselectedIconColor = DarkTextSecondary,
+                        unselectedTextColor = DarkTextSecondary,
+                    ),
+                )
+            }
+        }
+    }
+}
