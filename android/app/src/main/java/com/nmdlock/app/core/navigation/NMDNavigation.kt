@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+// ← FIX: Import colors từ theme file
 import com.nmdlock.app.core.ui.theme.*
 import com.nmdlock.app.feature.dashboard.DashboardScreen
 import com.nmdlock.app.feature.device.DeviceScreen
@@ -32,33 +33,9 @@ import com.nmdlock.app.feature.game.GameProfileScreen
 import com.nmdlock.app.feature.settings.SettingsScreen
 import com.nmdlock.app.feature.support.SupportScreen
 
-/**
- * Navigation routes - Sealed class cho type-safe navigation
- */
-sealed class NavRoutes(val route: String) {
-    object Dashboard : NavRoutes("dashboard")
-    object Device : NavRoutes("device")
-    object Key : NavRoutes("key")
-    object Optimization : NavRoutes("optimization")
-    object Network : NavRoutes("network")
-    object GameProfile : NavRoutes("game_profile")
-    object Settings : NavRoutes("settings")
-    object Support : NavRoutes("support")
-    
-    companion object {
-        val MAIN_ROUTES = listOf(
-            Dashboard.route,
-            Device.route,
-            Key.route,
-            Optimization.route,
-            Network.route
-        )
-    }
-}
+// ← FIX: XÓA toàn bộ sealed class NavRoutes ở đây (đã có trong NavRoutes.kt)
+// Chỉ giữ bottomNavItems và các Composable functions
 
-/**
- * Bottom navigation items.
- */
 data class BottomNavItem(
     val route: String,
     val label: String,
@@ -73,14 +50,6 @@ val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.Network.route, "Mạng", Icons.Default.Wifi),
 )
 
-/**
- * Main navigation host with bottom navigation bar.
- * 
- * FIX: 
- * - Thêm logging để debug navigation
- * - Đảm bảo NavHost luôn render với startDestination cố định
- * - Handle back navigation đúng cách
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NMDNavigation(
@@ -91,8 +60,9 @@ fun NMDNavigation(
     
     Scaffold(
         bottomBar = { NMDBottomBar(navController) },
-        containerColor = DarkBackground,
-        contentColor = DarkTextPrimary
+        // ← FIX: Dùng color từ MaterialTheme thay vì DarkBackground chưa import
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground
     ) { innerPadding ->
         Log.d("NMD_NAV", "NMDNavigation: Rendering NavHost with padding=$innerPadding")
         
@@ -100,11 +70,12 @@ fun NMDNavigation(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(DarkBackground)
+                // ← FIX: Dùng color từ theme
+                .background(MaterialTheme.colorScheme.background)
         ) {
             NavHost(
                 navController = navController,
-                startDestination = NavRoutes.Dashboard.route, // ← FIX: Route cố định, không dynamic
+                startDestination = NavRoutes.Dashboard.route,
                 modifier = Modifier.fillMaxSize(),
                 enterTransition = { slideInHorizontally(initialOffsetX = { it }) + fadeIn() },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) + fadeOut() },
@@ -116,88 +87,35 @@ fun NMDNavigation(
                 composable(NavRoutes.Dashboard.route) {
                     Log.d("NMD_NAV", "NMDNavigation: Rendering DashboardScreen")
                     DashboardScreen(
-                        onNavigateToGame = { 
-                            Log.d("NMD_NAV", "Navigate to GameProfile")
-                            navController.navigate(NavRoutes.GameProfile.route) 
-                        },
-                        onNavigateToSettings = { 
-                            Log.d("NMD_NAV", "Navigate to Settings")
-                            navController.navigate(NavRoutes.Settings.route) 
-                        },
-                        onNavigateToSupport = { 
-                            Log.d("NMD_NAV", "Navigate to Support")
-                            navController.navigate(NavRoutes.Support.route) 
-                        },
+                        onNavigateToGame = { navController.navigate(NavRoutes.GameProfile.route) },
+                        onNavigateToSettings = { navController.navigate(NavRoutes.Settings.route) },
+                        onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
                     )
                 }
                 
-                composable(NavRoutes.Device.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering DeviceScreen")
-                    DeviceScreen()
-                }
-                
-                composable(NavRoutes.Key.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering KeyScreen")
-                    KeyScreen()
-                }
-                
-                composable(NavRoutes.Optimization.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering OptimizationScreen")
-                    OptimizationScreen()
-                }
-                
-                composable(NavRoutes.Network.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering NetworkScreen")
-                    NetworkScreen()
-                }
+                composable(NavRoutes.Device.route) { DeviceScreen() }
+                composable(NavRoutes.Key.route) { KeyScreen() }
+                composable(NavRoutes.Optimization.route) { OptimizationScreen() }
+                composable(NavRoutes.Network.route) { NetworkScreen() }
                 
                 composable(NavRoutes.GameProfile.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering GameProfileScreen")
-                    GameProfileScreen(
-                        onBack = { 
-                            Log.d("NMD_NAV", "GameProfile: Back pressed")
-                            navController.popBackStack() 
-                        }
-                    )
+                    GameProfileScreen(onBack = { navController.popBackStack() })
                 }
-                
                 composable(NavRoutes.Settings.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering SettingsScreen")
-                    SettingsScreen(
-                        onBack = { 
-                            Log.d("NMD_NAV", "Settings: Back pressed")
-                            navController.popBackStack() 
-                        }
-                    )
+                    SettingsScreen(onBack = { navController.popBackStack() })
                 }
-                
                 composable(NavRoutes.Support.route) {
-                    Log.d("NMD_NAV", "NMDNavigation: Rendering SupportScreen")
-                    SupportScreen(
-                        onBack = { 
-                            Log.d("NMD_NAV", "Support: Back pressed")
-                            navController.popBackStack() 
-                        }
-                    )
+                    SupportScreen(onBack = { navController.popBackStack() })
                 }
             }
         }
     }
 }
 
-/**
- * Bottom navigation bar with NMDLock styling.
- * 
- * FIX:
- * - Chỉ show bottom bar cho main routes
- * - Handle navigation với proper back stack management
- */
 @Composable
 fun NMDBottomBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    
-    // Only show bottom bar for main screens (not for detail screens like GameProfile, Settings, Support)
     val showBottomBar = currentDestination?.route in NavRoutes.MAIN_ROUTES
     
     Log.d("NMD_NAV", "NMDBottomBar: currentRoute=${currentDestination?.route}, showBottomBar=$showBottomBar")
@@ -205,7 +123,8 @@ fun NMDBottomBar(navController: NavHostController) {
     if (showBottomBar) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = DarkSurface,
+            // ← FIX: Dùng color từ theme
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
             tonalElevation = 0.dp,
             shadowElevation = 8.dp,
         ) {
@@ -224,15 +143,8 @@ fun NMDBottomBar(navController: NavHostController) {
                         onClick = {
                             Log.d("NMD_NAV", "BottomBar: Clicked ${item.route}")
                             navController.navigate(item.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         },
@@ -240,18 +152,23 @@ fun NMDBottomBar(navController: NavHostController) {
                             Icon(
                                 imageVector = item.icon,
                                 contentDescription = item.label,
-                                tint = if (selected) Purple400 else DarkTextSecondary,
+                                // ← FIX: Dùng color từ theme
+                                tint = if (selected) MaterialTheme.colorScheme.primary 
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             )
                         },
                         label = {
                             Text(
                                 text = item.label,
-                                color = if (selected) Purple400 else DarkTextSecondary,
+                                // ← FIX: Dùng color từ theme
+                                color = if (selected) MaterialTheme.colorScheme.primary 
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 fontSize = 10.sp,
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Purple600.copy(alpha = 0.15f),
+                            // ← FIX: Dùng color từ theme
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                         ),
                     )
                 }
