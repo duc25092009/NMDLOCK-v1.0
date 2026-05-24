@@ -13,7 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp  // ← FIX: Thêm import này
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.nmdlock.app.core.navigation.NMDNavigation
 import com.nmdlock.app.core.ui.theme.NMDLockTheme
@@ -28,8 +28,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var dataStoreManager: DataStoreManager
+    @Inject lateinit var dataStoreManager: DataStoreManager
 
     private sealed class AppState {
         object Loading : AppState()
@@ -42,7 +41,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
         Log.d("NMD_MAIN", "=== MainActivity onCreate ===")
 
         setContent {
@@ -63,49 +61,33 @@ class MainActivity : ComponentActivity() {
             }
 
             NMDLockTheme(darkTheme = isDarkTheme) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     Log.d("NMD_MAIN", "Rendering AppState: $appState")
                     
                     when (val state = appState) {
                         is AppState.Loading -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    strokeWidth = 3.dp
-                                )
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
                             }
                         }
-                        
                         is AppState.Onboarding -> {
-                            OnboardingScreen(
-                                onComplete = {
-                                    scope.launch {
-                                        dataStoreManager.setOnboardingComplete()
-                                        appState = AppState.LicenseCheck
-                                    }
+                            OnboardingScreen(onComplete = {
+                                scope.launch {
+                                    dataStoreManager.setOnboardingComplete()
+                                    appState = AppState.LicenseCheck
                                 }
-                            )
+                            })
                         }
-                        
                         is AppState.LicenseCheck -> {
-                            // ← FIX: LicenseGateScreen chỉ có onLicenseValid, không có onLicenseError
-                            LicenseGateScreen(
-                                onLicenseValid = {
-                                    Log.d("NMD_MAIN", "License validated! Entering app")
-                                    appState = AppState.Ready
-                                }
-                                // ← XÓA onLicenseError vì hàm này không tồn tại trong LicenseGateScreen
-                            )
+                            LicenseGateScreen(onLicenseValid = {
+                                Log.d("NMD_MAIN", "License validated! Entering app")
+                                appState = AppState.Ready
+                            })
                         }
-                        
                         is AppState.Ready -> {
                             Log.d("NMD_MAIN", "Showing NMDNavigation (MAIN APP) ✓✓✓")
                             NMDNavigation()
                         }
-                        
                         is AppState.Error -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 androidx.compose.material3.Text(
