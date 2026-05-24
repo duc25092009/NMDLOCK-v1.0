@@ -1,20 +1,14 @@
 package com.nmdlock.app.core.navigation
 
-import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -52,18 +46,23 @@ val bottomNavItems = listOf(
 /**
  * Main navigation host with bottom navigation bar.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NMDNavigation() {
     val navController = rememberNavController()
 
     Scaffold(
+        containerColor = DarkBg,
         bottomBar = { NMDBottomBar(navController) }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             NavHost(
                 navController = navController,
                 startDestination = NavRoutes.Dashboard.route,
+                modifier = Modifier.fillMaxSize(),
             ) {
                 composable(NavRoutes.Dashboard.route) {
                     DashboardScreen(
@@ -99,65 +98,3 @@ fun NMDNavigation() {
 }
 
 /**
- * Bottom navigation bar with NMDLock styling.
- */
-@Composable
-fun NMDBottomBar(navController: NavHostController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    // Only show bottom bar for main screens
-    val showBottomBar = bottomNavItems.any { item ->
-        currentDestination?.hierarchy?.any { it.route == item.route } == true
-    }
-
-    if (showBottomBar) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = DarkSurface,
-            tonalElevation = 0.dp,
-            shadowElevation = 8.dp,
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                bottomNavItems.forEach { item ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label,
-                                tint = if (selected) Purple400 else DarkTextSecondary,
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.label,
-                                color = if (selected) Purple400 else DarkTextSecondary,
-                                fontSize = 10.sp,
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Purple600.copy(alpha = 0.15f),
-                        ),
-                    )
-                }
-            }
-        }
-    }
-}
