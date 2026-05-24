@@ -1,5 +1,6 @@
 package com.nmdlock.app.core.navigation
 
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -33,6 +33,30 @@ import com.nmdlock.app.feature.settings.SettingsScreen
 import com.nmdlock.app.feature.support.SupportScreen
 
 /**
+ * Navigation routes - Sealed class cho type-safe navigation
+ */
+sealed class NavRoutes(val route: String) {
+    object Dashboard : NavRoutes("dashboard")
+    object Device : NavRoutes("device")
+    object Key : NavRoutes("key")
+    object Optimization : NavRoutes("optimization")
+    object Network : NavRoutes("network")
+    object GameProfile : NavRoutes("game_profile")
+    object Settings : NavRoutes("settings")
+    object Support : NavRoutes("support")
+    
+    companion object {
+        val MAIN_ROUTES = listOf(
+            Dashboard.route,
+            Device.route,
+            Key.route,
+            Optimization.route,
+            Network.route
+        )
+    }
+}
+
+/**
  * Bottom navigation items.
  */
 data class BottomNavItem(
@@ -51,47 +75,110 @@ val bottomNavItems = listOf(
 
 /**
  * Main navigation host with bottom navigation bar.
+ * 
+ * FIX: 
+ * - Thêm logging để debug navigation
+ * - Đảm bảo NavHost luôn render với startDestination cố định
+ * - Handle back navigation đúng cách
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NMDNavigation() {
-    val navController = rememberNavController()
-
+fun NMDNavigation(
+    navController: NavHostController = rememberNavController(),
+    onLicenseExpired: () -> Unit = {}
+) {
+    Log.d("NMD_NAV", "NMDNavigation: Compose started")
+    
     Scaffold(
-        bottomBar = { NMDBottomBar(navController) }
+        bottomBar = { NMDBottomBar(navController) },
+        containerColor = DarkBackground,
+        contentColor = DarkTextPrimary
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Log.d("NMD_NAV", "NMDNavigation: Rendering NavHost with padding=$innerPadding")
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(DarkBackground)
+        ) {
             NavHost(
                 navController = navController,
-                startDestination = NavRoutes.Dashboard.route,
+                startDestination = NavRoutes.Dashboard.route, // ← FIX: Route cố định, không dynamic
+                modifier = Modifier.fillMaxSize(),
+                enterTransition = { slideInHorizontally(initialOffsetX = { it }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) + fadeOut() }
             ) {
+                Log.d("NMD_NAV", "NMDNavigation: Registering routes")
+                
                 composable(NavRoutes.Dashboard.route) {
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering DashboardScreen")
                     DashboardScreen(
-                        onNavigateToGame = { navController.navigate(NavRoutes.GameProfile.route) },
-                        onNavigateToSettings = { navController.navigate(NavRoutes.Settings.route) },
-                        onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
+                        onNavigateToGame = { 
+                            Log.d("NMD_NAV", "Navigate to GameProfile")
+                            navController.navigate(NavRoutes.GameProfile.route) 
+                        },
+                        onNavigateToSettings = { 
+                            Log.d("NMD_NAV", "Navigate to Settings")
+                            navController.navigate(NavRoutes.Settings.route) 
+                        },
+                        onNavigateToSupport = { 
+                            Log.d("NMD_NAV", "Navigate to Support")
+                            navController.navigate(NavRoutes.Support.route) 
+                        },
                     )
                 }
+                
                 composable(NavRoutes.Device.route) {
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering DeviceScreen")
                     DeviceScreen()
                 }
+                
                 composable(NavRoutes.Key.route) {
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering KeyScreen")
                     KeyScreen()
                 }
+                
                 composable(NavRoutes.Optimization.route) {
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering OptimizationScreen")
                     OptimizationScreen()
                 }
+                
                 composable(NavRoutes.Network.route) {
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering NetworkScreen")
                     NetworkScreen()
                 }
+                
                 composable(NavRoutes.GameProfile.route) {
-                    GameProfileScreen(onBack = { navController.popBackStack() })
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering GameProfileScreen")
+                    GameProfileScreen(
+                        onBack = { 
+                            Log.d("NMD_NAV", "GameProfile: Back pressed")
+                            navController.popBackStack() 
+                        }
+                    )
                 }
+                
                 composable(NavRoutes.Settings.route) {
-                    SettingsScreen(onBack = { navController.popBackStack() })
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering SettingsScreen")
+                    SettingsScreen(
+                        onBack = { 
+                            Log.d("NMD_NAV", "Settings: Back pressed")
+                            navController.popBackStack() 
+                        }
+                    )
                 }
+                
                 composable(NavRoutes.Support.route) {
-                    SupportScreen(onBack = { navController.popBackStack() })
+                    Log.d("NMD_NAV", "NMDNavigation: Rendering SupportScreen")
+                    SupportScreen(
+                        onBack = { 
+                            Log.d("NMD_NAV", "Support: Back pressed")
+                            navController.popBackStack() 
+                        }
+                    )
                 }
             }
         }
@@ -100,17 +187,21 @@ fun NMDNavigation() {
 
 /**
  * Bottom navigation bar with NMDLock styling.
+ * 
+ * FIX:
+ * - Chỉ show bottom bar cho main routes
+ * - Handle navigation với proper back stack management
  */
 @Composable
 fun NMDBottomBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-
-    // Only show bottom bar for main screens
-    val showBottomBar = bottomNavItems.any { item ->
-        currentDestination?.hierarchy?.any { it.route == item.route } == true
-    }
-
+    
+    // Only show bottom bar for main screens (not for detail screens like GameProfile, Settings, Support)
+    val showBottomBar = currentDestination?.route in NavRoutes.MAIN_ROUTES
+    
+    Log.d("NMD_NAV", "NMDBottomBar: currentRoute=${currentDestination?.route}, showBottomBar=$showBottomBar")
+    
     if (showBottomBar) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -127,14 +218,21 @@ fun NMDBottomBar(navController: NavHostController) {
             ) {
                 bottomNavItems.forEach { item ->
                     val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                    
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
+                            Log.d("NMD_NAV", "BottomBar: Clicked ${item.route}")
                             navController.navigate(item.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
                                 launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         },
