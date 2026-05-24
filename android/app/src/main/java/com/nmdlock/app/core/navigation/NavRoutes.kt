@@ -1,12 +1,9 @@
+// File: app/src/main/java/com/nmdlock/app/core/navigation/NavRoutes.kt
+// ← Đảm bảo file này tồn tại và KHÔNG khai báo NavRoutes ở nơi khác
+
 package com.nmdlock.app.core.navigation
 
-/**
- * Navigation route definitions for the app.
- */
 sealed class NavRoutes(val route: String) {
-    object Splash : NavRoutes("splash")
-    object Onboarding : NavRoutes("onboarding")
-    object Main : NavRoutes("main")
     object Dashboard : NavRoutes("dashboard")
     object Device : NavRoutes("device")
     object Key : NavRoutes("key")
@@ -15,6 +12,14 @@ sealed class NavRoutes(val route: String) {
     object GameProfile : NavRoutes("game_profile")
     object Settings : NavRoutes("settings")
     object Support : NavRoutes("support")
-    object Logs : NavRoutes("logs")
-    object LicenseGate : NavRoutes("license_gate")
+    
+    companion object {
+        val MAIN_ROUTES = listOf(
+            Dashboard.route,
+            Device.route,
+            Key.route,
+            Optimization.route,
+            Network.route
+        )
+    }
 }
