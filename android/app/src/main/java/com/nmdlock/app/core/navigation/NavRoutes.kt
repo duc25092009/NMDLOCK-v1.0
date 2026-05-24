@@ -1,6 +1,3 @@
-// File: app/src/main/java/com/nmdlock/app/core/navigation/NavRoutes.kt
-// ← Đảm bảo file này tồn tại và KHÔNG khai báo NavRoutes ở nơi khác
-
 package com.nmdlock.app.core.navigation
 
 sealed class NavRoutes(val route: String) {
@@ -15,11 +12,7 @@ sealed class NavRoutes(val route: String) {
     
     companion object {
         val MAIN_ROUTES = listOf(
-            Dashboard.route,
-            Device.route,
-            Key.route,
-            Optimization.route,
-            Network.route
+            Dashboard.route, Device.route, Key.route, Optimization.route, Network.route
         )
     }
 }
