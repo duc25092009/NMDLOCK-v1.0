@@ -6,15 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,7 +70,10 @@ class MainActivity : ComponentActivity() {
                     when (val state = appState) {
                         is AppState.Loading -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    strokeWidth = 3.dp
+                                )
                             }
                         }
                         is AppState.Onboarding -> {
@@ -89,59 +87,26 @@ class MainActivity : ComponentActivity() {
                         is AppState.LicenseCheck -> {
                             LicenseGateScreen(onLicenseValid = {
                                 Log.d("NMD_MAIN", "License validated! Entering app")
-                                try {
-                                    appState = AppState.Ready
-                                } catch (e: Exception) {
-                                    Log.e("NMD_MAIN", "Error transitioning to Ready state", e)
-                                    appState = AppState.Error("Lỗi khi vào app: ${e.message}")
-                                }
+                                appState = AppState.Ready
                             })
                         }
                         is AppState.Ready -> {
                             Log.d("NMD_MAIN", "Showing NMDNavigation (MAIN APP)")
-                            try {
-                                NMDNavigation(
-                                    onLicenseExpired = {
-                                        Log.w("NMD_MAIN", "License expired during usage")
-                                        appState = AppState.LicenseCheck
-                                    }
-                                )
-                            } catch (e: Exception) {
-                                Log.e("NMD_MAIN", "NMDNavigation crashed!", e)
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(
-                                            "Lỗi khi tải giao diện chính",
-                                            color = MaterialTheme.colorScheme.error,
-                                            style = MaterialTheme.typography.headlineSmall
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            e.message ?: "Unknown error",
-                                            color = MaterialTheme.colorScheme.onBackground,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Button(onClick = { appState = AppState.LicenseCheck }) {
-                                            Text("Thử lại")
-                                        }
-                                    }
+                            // ✅ KHÔNG CÓ TRY-CATCH ở đây nữa
+                            NMDNavigation(
+                                onLicenseExpired = {
+                                    Log.w("NMD_MAIN", "License expired during usage")
+                                    appState = AppState.LicenseCheck
                                 }
-                            }
+                            )
                         }
                         is AppState.Error -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        "Lỗi: ${state.message}",
-                                        color = MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Button(onClick = { appState = AppState.Loading }) {
-                                        Text("Thử lại")
-                                    }
-                                }
+                                androidx.compose.material3.Text(
+                                    text = "⚠️ Lỗi: ${state.message}",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
                             }
                         }
                     }
