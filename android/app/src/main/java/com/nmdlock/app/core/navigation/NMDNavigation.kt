@@ -70,19 +70,89 @@ fun NMDNavigation(
                 
                 composable(NavRoutes.Dashboard.route) {
                     Log.d("NMD_NAV", "NMDNavigation: Rendering DashboardScreen")
-                    DashboardScreen(
-                        onNavigateToGame = { navController.navigate(NavRoutes.GameProfile.route) },
-                        onNavigateToSettings = { navController.navigate(NavRoutes.Settings.route) },
-                        onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
-                    )
+                    try {
+                        DashboardScreen(
+                            onNavigateToGame = { navController.navigate(NavRoutes.GameProfile.route) },
+                            onNavigateToSettings = { navController.navigate(NavRoutes.Settings.route) },
+                            onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
+                        )
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "DashboardScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Dashboard: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 }
-                composable(NavRoutes.Device.route) { DeviceScreen() }
-                composable(NavRoutes.Key.route) { KeyScreen() }
-                composable(NavRoutes.Optimization.route) { OptimizationScreen() }
-                composable(NavRoutes.Network.route) { NetworkScreen() }
-                composable(NavRoutes.GameProfile.route) { GameProfileScreen(onBack = { navController.popBackStack() }) }
-                composable(NavRoutes.Settings.route) { SettingsScreen(onBack = { navController.popBackStack() }) }
-                composable(NavRoutes.Support.route) { SupportScreen(onBack = { navController.popBackStack() }) }
+                composable(NavRoutes.Device.route) {
+                    try {
+                        DeviceScreen()
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "DeviceScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Device: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                composable(NavRoutes.Key.route) {
+                    try {
+                        KeyScreen()
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "KeyScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Key: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                composable(NavRoutes.Optimization.route) {
+                    try {
+                        OptimizationScreen()
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "OptimizationScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Optimization: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                composable(NavRoutes.Network.route) {
+                    try {
+                        NetworkScreen()
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "NetworkScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Network: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                composable(NavRoutes.GameProfile.route) {
+                    try {
+                        GameProfileScreen(onBack = { navController.popBackStack() })
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "GameProfileScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải GameProfile: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                composable(NavRoutes.Settings.route) {
+                    try {
+                        SettingsScreen(onBack = { navController.popBackStack() })
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "SettingsScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Settings: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+                composable(NavRoutes.Support.route) {
+                    try {
+                        SupportScreen(onBack = { navController.popBackStack() })
+                    } catch (e: Exception) {
+                        Log.e("NMD_NAV", "SupportScreen crashed", e)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Lỗi tải Support: ${e.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
             }
         }
     }
