@@ -22,14 +22,12 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
-            // ✅ FIXED: Changed from http://10.0.2.2:3000/api/ to Cloudflare URL
             buildConfigField("String", "API_BASE_URL", "\"https://gem-applicant-leaders-secretariat.trycloudflare.com/api/\"")
             buildConfigField("boolean", "LOG_ENABLED", "true")
         }
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // ✅ FIXED: Changed from https://api.nmdlock.com/api/ to Cloudflare URL
             buildConfigField("String", "API_BASE_URL", "\"https://gem-applicant-leaders-secretariat.trycloudflare.com/api/\"")
             buildConfigField("boolean", "LOG_ENABLED", "false")
         }
@@ -49,7 +47,6 @@ android {
 }
 
 dependencies {
-    // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2023.10.01")
     implementation(composeBom)
 
@@ -91,7 +88,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
 
-    // Shizuku for elevated permissions (ADB-level without root)
+    // Shizuku
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
 
@@ -104,10 +101,7 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // OkHttp (for BurstSpeedTester)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
-    // TensorFlow Lite (for thermal prediction ML)
+    // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
 
     // Testing
@@ -120,6 +114,4 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
-kapt {
-    correctErrorTypes = true
-}
+kapt { correctErrorTypes = true }
