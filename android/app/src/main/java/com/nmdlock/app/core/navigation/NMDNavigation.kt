@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -22,7 +21,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-// ← FIX: Import colors từ theme file
 import com.nmdlock.app.core.ui.theme.*
 import com.nmdlock.app.feature.dashboard.DashboardScreen
 import com.nmdlock.app.feature.device.DeviceScreen
@@ -33,14 +31,7 @@ import com.nmdlock.app.feature.game.GameProfileScreen
 import com.nmdlock.app.feature.settings.SettingsScreen
 import com.nmdlock.app.feature.support.SupportScreen
 
-// ← FIX: XÓA toàn bộ sealed class NavRoutes ở đây (đã có trong NavRoutes.kt)
-// Chỉ giữ bottomNavItems và các Composable functions
-
-data class BottomNavItem(
-    val route: String,
-    val label: String,
-    val icon: ImageVector,
-)
+data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
 
 val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.Dashboard.route, "Tổng quan", Icons.Default.Dashboard),
@@ -60,19 +51,12 @@ fun NMDNavigation(
     
     Scaffold(
         bottomBar = { NMDBottomBar(navController) },
-        // ← FIX: Dùng color từ MaterialTheme thay vì DarkBackground chưa import
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
     ) { innerPadding ->
         Log.d("NMD_NAV", "NMDNavigation: Rendering NavHost with padding=$innerPadding")
         
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                // ← FIX: Dùng color từ theme
-                .background(MaterialTheme.colorScheme.background)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding).background(MaterialTheme.colorScheme.background)) {
             NavHost(
                 navController = navController,
                 startDestination = NavRoutes.Dashboard.route,
@@ -92,21 +76,13 @@ fun NMDNavigation(
                         onNavigateToSupport = { navController.navigate(NavRoutes.Support.route) },
                     )
                 }
-                
                 composable(NavRoutes.Device.route) { DeviceScreen() }
                 composable(NavRoutes.Key.route) { KeyScreen() }
                 composable(NavRoutes.Optimization.route) { OptimizationScreen() }
                 composable(NavRoutes.Network.route) { NetworkScreen() }
-                
-                composable(NavRoutes.GameProfile.route) {
-                    GameProfileScreen(onBack = { navController.popBackStack() })
-                }
-                composable(NavRoutes.Settings.route) {
-                    SettingsScreen(onBack = { navController.popBackStack() })
-                }
-                composable(NavRoutes.Support.route) {
-                    SupportScreen(onBack = { navController.popBackStack() })
-                }
+                composable(NavRoutes.GameProfile.route) { GameProfileScreen(onBack = { navController.popBackStack() }) }
+                composable(NavRoutes.Settings.route) { SettingsScreen(onBack = { navController.popBackStack() }) }
+                composable(NavRoutes.Support.route) { SupportScreen(onBack = { navController.popBackStack() }) }
             }
         }
     }
@@ -121,23 +97,10 @@ fun NMDBottomBar(navController: NavHostController) {
     Log.d("NMD_NAV", "NMDBottomBar: currentRoute=${currentDestination?.route}, showBottomBar=$showBottomBar")
     
     if (showBottomBar) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            // ← FIX: Dùng color từ theme
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
-            tonalElevation = 0.dp,
-            shadowElevation = 8.dp,
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+        Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f), tonalElevation = 0.dp, shadowElevation = 8.dp) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 bottomNavItems.forEach { item ->
                     val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-                    
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -148,28 +111,9 @@ fun NMDBottomBar(navController: NavHostController) {
                                 restoreState = true
                             }
                         },
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label,
-                                // ← FIX: Dùng color từ theme
-                                tint = if (selected) MaterialTheme.colorScheme.primary 
-                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.label,
-                                // ← FIX: Dùng color từ theme
-                                color = if (selected) MaterialTheme.colorScheme.primary 
-                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontSize = 10.sp,
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            // ← FIX: Dùng color từ theme
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                        ),
+                        icon = { Icon(imageVector = item.icon, contentDescription = item.label, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)) },
+                        label = { Text(text = item.label, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 10.sp) },
+                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                     )
                 }
             }
